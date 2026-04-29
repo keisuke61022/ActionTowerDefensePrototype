@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace PrototypeTD
@@ -28,6 +27,7 @@ namespace PrototypeTD
             Instance = this;
             DontDestroyOnLoad(gameObject);
             SetupCamera();
+            CleanupLegacySceneObjects();
             SetupSystems();
             BuildArena();
             UIManager.BuildUI();
@@ -45,9 +45,21 @@ namespace PrototypeTD
             }
 
             _mainCamera.orthographic = true;
-            _mainCamera.orthographicSize = 9f;
+            _mainCamera.orthographicSize = 8f;
             _mainCamera.transform.position = new Vector3(0f, 0f, -10f);
             _mainCamera.backgroundColor = new Color(0.08f, 0.08f, 0.1f);
+        }
+
+
+        private void CleanupLegacySceneObjects()
+        {
+            foreach (var canvas in FindObjectsOfType<Canvas>())
+            {
+                if (canvas.name != "GameCanvas")
+                {
+                    Destroy(canvas.gameObject);
+                }
+            }
         }
 
         private void SetupSystems()
@@ -63,9 +75,9 @@ namespace PrototypeTD
         private void BuildArena()
         {
             CreateBackground();
-            PlayerBase = CreateBase("PlayerBase", new Vector2(0f, -6.2f), Color.cyan, 30, false);
-            EnemyBase = CreateBase("EnemyBase", new Vector2(0f, 6.5f), Color.red, 30, true);
-            Player = CreatePlayer(new Vector2(0f, -4.6f));
+            PlayerBase = CreateBase("PlayerBase", new Vector2(0f, -5.7f), Color.cyan, 50, false);
+            EnemyBase = CreateBase("EnemyBase", new Vector2(0f, 6.1f), Color.red, 45, true);
+            Player = CreatePlayer(new Vector2(0f, -4.1f));
         }
 
         private void CreateBackground()
@@ -73,9 +85,9 @@ namespace PrototypeTD
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
             bg.name = "BattleField";
             Destroy(bg.GetComponent<Collider>());
-            bg.transform.position = new Vector3(0f, 1f, 2f);
-            bg.transform.localScale = new Vector3(9f, 15f, 1f);
-            bg.GetComponent<MeshRenderer>().material.color = new Color(0.13f, 0.2f, 0.13f);
+            bg.transform.position = new Vector3(0f, 0.6f, 2f);
+            bg.transform.localScale = new Vector3(8.6f, 12.8f, 1f);
+            bg.GetComponent<MeshRenderer>().material.color = new Color(0.12f, 0.18f, 0.14f);
         }
 
         private BaseController CreateBase(string name, Vector2 position, Color color, int hp, bool enemy)
