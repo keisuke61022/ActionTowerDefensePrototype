@@ -9,6 +9,7 @@ namespace PrototypeTD
         private Text _statusText;
         private Text _messageText;
         private Text _helpText;
+        private Text _costLabel;
         private RectTransform _costGaugeParent;
 
         private JoystickArea _joystick;
@@ -23,24 +24,22 @@ namespace PrototypeTD
             if (_statusText != null)
             {
                 var gm = GameManager.Instance;
-                _statusText.text = $"Player Base HP: {gm.PlayerBase.CurrentHp}   Enemy Base HP: {gm.EnemyBase.CurrentHp}\n" +
-                                   $"Player HP: {gm.Player.CurrentHp}   Cost: {gm.CostManager.Current}/{gm.CostManager.Max}   Wave: {gm.WaveManager.CurrentWave}/5";
-                UpdateCostGauge(gm.CostManager.Current, gm.CostManager.Max);
+                _statusText.text = $"Base HP: {gm.PlayerBase.CurrentHp}/{gm.PlayerBase.MaxHp}  Enemy Base HP: {gm.EnemyBase.CurrentHp}/{gm.EnemyBase.MaxHp}\n" +
+                                   $"Player HP: {gm.Player.CurrentHp}  Cost: {gm.CostManager.Current}/{gm.CostManager.Max}  Wave: {gm.WaveManager.CurrentWave}/5";
+                _costLabel.text = $"Cost {gm.CostManager.Current}/{gm.CostManager.Max}";
+                UpdateCostGauge(gm.CostManager.Current);
             }
         }
 
-        public Vector2 GetStickDirection()
-        {
-            return _joystick == null ? Vector2.zero : _joystick.Direction;
-        }
+        public Vector2 GetStickDirection() => _joystick == null ? Vector2.zero : _joystick.Direction;
 
         public void BuildUI()
         {
             Canvas canvas = CreateCanvas();
-            _statusText = CreateText(canvas.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -10f), 18, TextAnchor.UpperCenter);
-            _helpText = CreateText(canvas.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 110f), 16, TextAnchor.MiddleCenter);
-            _helpText.text = "Shoot: Space/Click/右ボタン  Place Turret: E/ユニット1\nMelee and Unit2-4 are placeholders";
-            _messageText = CreateText(canvas.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, 34, TextAnchor.MiddleCenter);
+            _statusText = CreateText(canvas.transform, "Status", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -12f), 24, TextAnchor.UpperCenter, new Vector2(1020f, 130f));
+            _helpText = CreateText(canvas.transform, "Help", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 292f), 20, TextAnchor.MiddleCenter, new Vector2(1020f, 100f));
+            _helpText.text = "Left: Move  Right: Actions  Gray buttons are placeholders";
+            _messageText = CreateText(canvas.transform, "Message", new Vector2(0.5f, 0.67f), new Vector2(0.5f, 0.67f), Vector2.zero, 52, TextAnchor.MiddleCenter, new Vector2(980f, 200f));
 
             BuildBottomPanel(canvas.transform);
         }
@@ -53,35 +52,49 @@ namespace PrototypeTD
         private void BuildBottomPanel(Transform parent)
         {
             var panel = CreateUIObject("BottomPanel", parent).AddComponent<Image>();
-            panel.color = new Color(0f, 0f, 0f, 0.5f);
+            panel.color = new Color(0f, 0f, 0f, 0.55f);
             var rt = panel.rectTransform;
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(1f, 0.26f);
+            rt.anchorMin = new Vector2(0f, 0.06f);
+            rt.anchorMax = new Vector2(1f, 0.30f);
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
             var stickArea = CreateUIObject("Joystick", panel.transform).AddComponent<Image>();
-            stickArea.color = new Color(1f, 1f, 1f, 0.2f);
+            stickArea.color = new Color(1f, 1f, 1f, 0.12f);
             var stickRt = stickArea.rectTransform;
-            stickRt.anchorMin = new Vector2(0f, 0f);
-            stickRt.anchorMax = new Vector2(0f, 1f);
-            stickRt.sizeDelta = new Vector2(180f, 0f);
-            stickRt.anchoredPosition = new Vector2(90f, 0f);
+            stickRt.anchorMin = new Vector2(0.03f, 0.1f);
+            stickRt.anchorMax = new Vector2(0.38f, 0.9f);
+            stickRt.offsetMin = Vector2.zero;
+            stickRt.offsetMax = Vector2.zero;
             _joystick = stickArea.gameObject.AddComponent<JoystickArea>();
 
-            _shootButton = BuildButton(panel.transform, "Shoot", new Vector2(1f, 0.5f), new Vector2(-110f, 35f), new Vector2(80f, 60f), Color.red).gameObject.AddComponent<HoldButton>();
-            BuildButton(panel.transform, "Melee\nN/A", new Vector2(1f, 0.5f), new Vector2(-20f, 35f), new Vector2(80f, 60f), Color.gray);
+            var actions = CreateUIObject("Actions", panel.transform).GetComponent<RectTransform>();
+            actions.anchorMin = new Vector2(0.50f, 0.08f);
+            actions.anchorMax = new Vector2(0.98f, 0.92f);
+            actions.offsetMin = Vector2.zero;
+            actions.offsetMax = Vector2.zero;
 
-            _unitButton = BuildButton(panel.transform, "Unit1", new Vector2(1f, 0.5f), new Vector2(-110f, -35f), new Vector2(80f, 60f), new Color(0.2f, 0.7f, 1f)).gameObject.AddComponent<PressButton>();
-            BuildButton(panel.transform, "Unit2\nN/A", new Vector2(1f, 0.5f), new Vector2(-20f, -35f), new Vector2(80f, 60f), Color.gray);
-            BuildButton(panel.transform, "Unit3\nN/A", new Vector2(1f, 0.5f), new Vector2(-200f, -35f), new Vector2(80f, 60f), Color.gray);
-            BuildButton(panel.transform, "Unit4\nN/A", new Vector2(1f, 0.5f), new Vector2(-290f, -35f), new Vector2(80f, 60f), Color.gray);
+            _shootButton = BuildGridButton(actions, "Shoot", 0, 0, new Color(0.82f, 0.2f, 0.2f)).gameObject.AddComponent<HoldButton>();
+            BuildGridButton(actions, "Melee\nN/A", 1, 0, new Color(0.35f, 0.35f, 0.35f));
+            _unitButton = BuildGridButton(actions, "Unit1", 2, 0, new Color(0.18f, 0.58f, 0.95f)).gameObject.AddComponent<PressButton>();
+            BuildGridButton(actions, "Unit2\nN/A", 0, 1, new Color(0.35f, 0.35f, 0.35f));
+            BuildGridButton(actions, "Unit3\nN/A", 1, 1, new Color(0.35f, 0.35f, 0.35f));
+            BuildGridButton(actions, "Unit4\nN/A", 2, 1, new Color(0.35f, 0.35f, 0.35f));
 
-            _costGaugeParent = CreateUIObject("CostGauge", parent).GetComponent<RectTransform>();
-            _costGaugeParent.anchorMin = new Vector2(0f, 0f);
-            _costGaugeParent.anchorMax = new Vector2(1f, 0f);
-            _costGaugeParent.sizeDelta = new Vector2(0f, 32f);
-            _costGaugeParent.anchoredPosition = new Vector2(0f, 16f);
+            var gaugeBg = CreateUIObject("CostGaugeBg", parent).AddComponent<Image>();
+            gaugeBg.color = new Color(0f, 0f, 0f, 0.82f);
+            var gaugeBgRt = gaugeBg.rectTransform;
+            gaugeBgRt.anchorMin = new Vector2(0f, 0f);
+            gaugeBgRt.anchorMax = new Vector2(1f, 0.06f);
+            gaugeBgRt.offsetMin = Vector2.zero;
+            gaugeBgRt.offsetMax = Vector2.zero;
+
+            _costLabel = CreateText(gaugeBg.transform, "CostLabel", new Vector2(0.5f, 0.68f), new Vector2(0.5f, 0.68f), Vector2.zero, 18, TextAnchor.MiddleCenter, new Vector2(320f, 26f));
+            _costGaugeParent = CreateUIObject("CostGauge", gaugeBg.transform).GetComponent<RectTransform>();
+            _costGaugeParent.anchorMin = new Vector2(0.02f, 0.05f);
+            _costGaugeParent.anchorMax = new Vector2(0.98f, 0.45f);
+            _costGaugeParent.offsetMin = Vector2.zero;
+            _costGaugeParent.offsetMax = Vector2.zero;
 
             for (int i = 0; i < 10; i++)
             {
@@ -89,18 +102,43 @@ namespace PrototypeTD
                 var cellRt = cell.rectTransform;
                 cellRt.anchorMin = new Vector2(i / 10f, 0f);
                 cellRt.anchorMax = new Vector2((i + 1) / 10f, 1f);
-                cellRt.offsetMin = new Vector2(2f, 2f);
-                cellRt.offsetMax = new Vector2(-2f, -2f);
+                cellRt.offsetMin = new Vector2(2f, 1f);
+                cellRt.offsetMax = new Vector2(-2f, -1f);
+                cell.color = new Color(0.2f, 0.2f, 0.2f);
             }
         }
 
-        private void UpdateCostGauge(int current, int max)
+        private Image BuildGridButton(RectTransform parent, string label, int row, int col, Color color)
+        {
+            var image = CreateUIObject(label, parent).AddComponent<Image>();
+            image.color = color;
+            var rt = image.rectTransform;
+            float rows = 3f;
+            float cols = 2f;
+            float xMin = col / cols;
+            float xMax = (col + 1f) / cols;
+            float yMax = 1f - row / rows;
+            float yMin = 1f - (row + 1f) / rows;
+            rt.anchorMin = new Vector2(xMin, yMin);
+            rt.anchorMax = new Vector2(xMax, yMax);
+            rt.offsetMin = new Vector2(5f, 5f);
+            rt.offsetMax = new Vector2(-5f, -5f);
+
+            var txt = CreateText(image.transform, "Label", Vector2.zero, Vector2.one, Vector2.zero, 24, TextAnchor.MiddleCenter, Vector2.zero);
+            txt.text = label;
+            txt.resizeTextForBestFit = true;
+            txt.resizeTextMinSize = 12;
+            txt.resizeTextMaxSize = 24;
+            return image;
+        }
+
+        private void UpdateCostGauge(int current)
         {
             if (_costGaugeParent == null) return;
             for (int i = 0; i < _costGaugeParent.childCount; i++)
             {
                 var img = _costGaugeParent.GetChild(i).GetComponent<Image>();
-                img.color = i < current ? Color.green : new Color(0.2f, 0.2f, 0.2f);
+                img.color = i < current ? new Color(0.15f, 0.85f, 0.2f) : new Color(0.2f, 0.2f, 0.2f);
             }
         }
 
@@ -112,12 +150,14 @@ namespace PrototypeTD
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1080f, 1920f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 1f;
             return canvas;
         }
 
-        private Text CreateText(Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, int size, TextAnchor alignment)
+        private Text CreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, int size, TextAnchor alignment, Vector2 sizeDelta)
         {
-            var textGo = CreateUIObject("Text", parent);
+            var textGo = CreateUIObject(name, parent);
             var text = textGo.AddComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.fontSize = size;
@@ -126,25 +166,9 @@ namespace PrototypeTD
             var rt = text.rectTransform;
             rt.anchorMin = anchorMin;
             rt.anchorMax = anchorMax;
-            rt.sizeDelta = new Vector2(980f, 120f);
+            rt.sizeDelta = sizeDelta;
             rt.anchoredPosition = anchoredPos;
             return text;
-        }
-
-        private Image BuildButton(Transform parent, string label, Vector2 anchor, Vector2 anchoredPos, Vector2 size, Color color)
-        {
-            var image = CreateUIObject(label, parent).AddComponent<Image>();
-            image.color = color;
-            var rt = image.rectTransform;
-            rt.anchorMin = anchor;
-            rt.anchorMax = anchor;
-            rt.anchoredPosition = anchoredPos;
-            rt.sizeDelta = size;
-
-            var txt = CreateText(image.transform, Vector2.zero, Vector2.one, Vector2.zero, 16, TextAnchor.MiddleCenter);
-            txt.text = label;
-            txt.resizeTextForBestFit = true;
-            return image;
         }
 
         private GameObject CreateUIObject(string name, Transform parent)
