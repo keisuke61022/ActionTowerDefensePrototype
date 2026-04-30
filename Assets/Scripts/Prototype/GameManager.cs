@@ -16,7 +16,10 @@ namespace PrototypeTD
 
         private Camera _mainCamera;
 
-        public Rect PlayableRect => new Rect(-4f, -5.2f, 8f, 12.2f);
+        [SerializeField] private Rect _playableRect = new Rect(-4f, -2.1f, 8f, 9.1f);
+        [SerializeField] private float _playablePadding = 0.05f;
+
+        public Rect PlayableRect => _playableRect;
 
         private void Awake()
         {
@@ -156,9 +159,28 @@ namespace PrototypeTD
                 return;
             }
             var pos = Player.transform.position + Vector3.up * 1.2f;
-            pos.x = Mathf.Clamp(pos.x, -3.8f, 3.8f);
-            pos.y = Mathf.Clamp(pos.y, -4.8f, 4.2f);
+            var placeRect = GetPlayableRectForExtents(new Vector2(0.45f, 0.45f));
+            pos.x = Mathf.Clamp(pos.x, placeRect.xMin, placeRect.xMax);
+            pos.y = Mathf.Clamp(pos.y, placeRect.yMin, placeRect.yMax);
             UnitController.CreateTurret(pos);
+        }
+
+        public Rect GetPlayableRectForExtents(Vector2 extents)
+        {
+            return Rect.MinMaxRect(
+                _playableRect.xMin + extents.x + _playablePadding,
+                _playableRect.yMin + extents.y + _playablePadding,
+                _playableRect.xMax - extents.x - _playablePadding,
+                _playableRect.yMax - extents.y - _playablePadding
+            );
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = new Color(0.25f, 0.95f, 1f, 0.65f);
+            Vector3 center = new Vector3(_playableRect.center.x, _playableRect.center.y, 0f);
+            Vector3 size = new Vector3(_playableRect.width, _playableRect.height, 0f);
+            Gizmos.DrawWireCube(center, size);
         }
 
         public void OnBaseDestroyed(BaseController baseController)
