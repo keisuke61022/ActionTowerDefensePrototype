@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace PrototypeTD
 {
@@ -20,30 +21,36 @@ namespace PrototypeTD
 
         private void Move()
         {
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
-            Vector2 stick = GameManager.Instance.UIManager.GetStickDirection();
+            Vector2 moveInput = Vector2.zero;
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveInput.x -= 1f;
+                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveInput.x += 1f;
+                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveInput.y += 1f;
+                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveInput.y -= 1f;
+            }
 
-            Vector3 dir = new Vector3(horizontal + stick.x, vertical + stick.y, 0f);
+            Vector2 stick = GameManager.Instance.UIManager.GetStickDirection();
+            Vector3 dir = new Vector3(moveInput.x + stick.x, moveInput.y + stick.y, 0f);
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
             transform.position += dir * (_speed * Time.deltaTime);
-            transform.position = new Vector3(
-                Mathf.Clamp(transform.position.x, -4f, 4f),
-                Mathf.Clamp(transform.position.y, -7f, 7f),
-                0f);
+            transform.position = new Vector3(Mathf.Clamp(transform.position.x, -4f, 4f), Mathf.Clamp(transform.position.y, -7f, 7f), 0f);
         }
 
         private void HandleActions()
         {
-            bool shootPressed = Input.GetKey(KeyCode.Space) || Input.GetMouseButton(0) || GameManager.Instance.UIManager.ShootPressed;
+            bool keyboardShoot = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+            bool mouseShoot = Mouse.current != null && Mouse.current.leftButton.isPressed;
+            bool shootPressed = keyboardShoot || mouseShoot || GameManager.Instance.UIManager.ShootPressed;
             if (shootPressed && Time.time >= _nextShoot)
             {
                 _nextShoot = Time.time + _shootCooldown;
                 ProjectileController.Create(transform.position + Vector3.up * 0.7f, Vector3.up, 8f, 1, true);
             }
 
-            if (Input.GetKeyDown(KeyCode.E) || GameManager.Instance.UIManager.PlaceUnit1Pressed)
+            bool placePressed = Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
+            if (placePressed || GameManager.Instance.UIManager.PlaceUnit1Pressed)
             {
                 GameManager.Instance.TryPlaceTurret();
             }
