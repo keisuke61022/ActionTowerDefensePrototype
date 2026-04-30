@@ -42,10 +42,10 @@ namespace PrototypeTD
         public void BuildUI()
         {
             Canvas canvas = CreateCanvas();
-            _statusText = CreateText(canvas.transform, "Status", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), 20, TextAnchor.UpperCenter, new Vector2(1020f, 120f));
-            _helpText = CreateText(canvas.transform, "Help", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 378f), 18, TextAnchor.MiddleCenter, new Vector2(1020f, 72f));
+            _statusText = CreateText(canvas.transform, "Status", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -14f), 16, TextAnchor.UpperCenter, new Vector2(1020f, 120f));
+            _helpText = CreateText(canvas.transform, "Help", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 408f), 15, TextAnchor.MiddleCenter, new Vector2(1020f, 72f));
             _helpText.text = "移動: WASD/矢印/スティック  射撃: Space  設置: E";
-            _messageText = CreateText(canvas.transform, "Message", new Vector2(0.5f, 0.67f), new Vector2(0.5f, 0.67f), Vector2.zero, 52, TextAnchor.MiddleCenter, new Vector2(980f, 200f));
+            _messageText = CreateText(canvas.transform, "Message", new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.78f), Vector2.zero, 34, TextAnchor.MiddleCenter, new Vector2(980f, 200f));
 
             BuildBottomPanel(canvas.transform);
         }
