@@ -35,8 +35,25 @@ namespace PrototypeTD
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
             transform.position += dir * (_speed * Time.deltaTime);
-            Rect playable = GameManager.Instance.PlayableRect;
-            transform.position = new Vector3(Mathf.Clamp(transform.position.x, playable.xMin, playable.xMax), Mathf.Clamp(transform.position.y, playable.yMin, playable.yMax), 0f);
+
+            var extents = GetVisualExtents();
+            Rect playable = GameManager.Instance.GetPlayableRectForExtents(extents);
+            transform.position = new Vector3(
+                Mathf.Clamp(transform.position.x, playable.xMin, playable.xMax),
+                Mathf.Clamp(transform.position.y, playable.yMin, playable.yMax),
+                0f
+            );
+        }
+
+        private Vector2 GetVisualExtents()
+        {
+            var col = GetComponent<Collider>();
+            if (col != null) return col.bounds.extents;
+
+            var renderer = GetComponent<Renderer>();
+            if (renderer != null) return renderer.bounds.extents;
+
+            return new Vector2(0.4f, 0.4f);
         }
 
         private void HandleActions()
