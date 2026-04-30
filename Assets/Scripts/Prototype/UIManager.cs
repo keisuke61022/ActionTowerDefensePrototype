@@ -30,7 +30,7 @@ namespace PrototypeTD
 
             var gm = GameManager.Instance;
             _statusText.text = $"拠点HP: {gm.PlayerBase.CurrentHp}/{gm.PlayerBase.MaxHp}  敵拠点HP: {gm.EnemyBase.CurrentHp}/{gm.EnemyBase.MaxHp}\n" +
-                               $"プレイヤーHP: {gm.Player.CurrentHp}  コスト: {gm.CostManager.Current}/{gm.CostManager.Max}  Wave: {gm.WaveManager.CurrentWave}/5";
+                               $"プレイヤーHP: {gm.Player.CurrentHp}  コスト: {gm.CostManager.Current}/{gm.CostManager.Max}  敵コスト: {gm.EnemyCostManager.Current}/{gm.EnemyCostManager.Max}";
             _costLabel.text = $"コスト {gm.CostManager.Current}/{gm.CostManager.Max}";
             UpdateCostGauge(gm.CostManager.Current);
             UpdateButtonStates(gm.CostManager.Current);

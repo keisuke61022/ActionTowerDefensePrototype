@@ -11,7 +11,7 @@ namespace PrototypeTD
         public static void CreateTurret(Vector3 position)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            go.name = "TurretUnit1";
+            go.name = "PlayerTurret";
             go.transform.position = position;
             go.transform.localScale = new Vector3(0.5f, 0.35f, 0.5f);
             go.GetComponent<MeshRenderer>().material.color = new Color(0.2f, 0.7f, 1f);
@@ -39,6 +39,7 @@ namespace PrototypeTD
             float bestDistance = float.MaxValue;
             foreach (var enemy in enemies)
             {
+                if (!enemy.IsEnemySide) continue;
                 float distance = Vector2.Distance(transform.position, enemy.transform.position);
                 if (distance <= _range && distance < bestDistance)
                 {
