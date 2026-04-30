@@ -15,7 +15,7 @@ namespace PrototypeTD
             go.name = playerSide ? "PlayerBullet" : "EnemyBullet";
             go.transform.position = position;
             go.transform.localScale = Vector3.one * 0.2f;
-            go.GetComponent<MeshRenderer>().material.color = playerSide ? Color.white : Color.magenta;
+            go.GetComponent<MeshRenderer>().material.color = playerSide ? new Color(0.45f, 0.85f, 1f) : new Color(1f, 0.3f, 0.3f);
 
             var col = go.AddComponent<SphereCollider>();
             col.isTrigger = true;
@@ -29,27 +29,49 @@ namespace PrototypeTD
             projectile._damage = damage;
             projectile._playerSide = playerSide;
 
-            Destroy(go, 3f);
+            Object.Destroy(go, 3f);
         }
 
-        private void Update()
-        {
-            transform.position += _direction * (_speed * Time.deltaTime);
-        }
+        private void Update() => transform.position += _direction * (_speed * Time.deltaTime);
 
         private void OnTriggerEnter(Collider other)
         {
             if (_playerSide)
             {
-                if (other.TryGetComponent<EnemyController>(out var enemy))
+                if (other.TryGetComponent<EnemyController>(out var enemy) && enemy.IsEnemySide)
                 {
                     enemy.TakeDamage(_damage);
                     Destroy(gameObject);
+                    return;
                 }
-
+                if (other.TryGetComponent<EnemyCommanderController>(out _))
+                {
+                    Destroy(gameObject);
+                    return;
+                }
                 if (other.TryGetComponent<BaseController>(out var targetBase) && targetBase.IsEnemy)
                 {
-                    targetBase.TakeDamage(_damage);
+                    targetBase.TakeDamage(1);
+                    Destroy(gameObject);
+                }
+            }
+            else
+            {
+                if (other.TryGetComponent<PlayerController>(out var player))
+                {
+                    player.TakeDamage(_damage);
+                    Destroy(gameObject);
+                    return;
+                }
+                if (other.TryGetComponent<EnemyController>(out var ally) && !ally.IsEnemySide)
+                {
+                    ally.TakeDamage(_damage);
+                    Destroy(gameObject);
+                    return;
+                }
+                if (other.TryGetComponent<BaseController>(out var myBase) && !myBase.IsEnemy)
+                {
+                    myBase.TakeDamage(_damage);
                     Destroy(gameObject);
                 }
             }
