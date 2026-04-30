@@ -102,6 +102,13 @@ namespace PrototypeTD
             return unit;
         }
 
+        // Backward-compatible API used by WaveManager.
+        public EnemyController SpawnEnemy(Vector2 position)
+        {
+            if (IsGameOver) return null;
+            return SpawnUnit(position, true);
+        }
+
         private void EnemyCpuSpawnTick()
         {
             if (Time.time < _nextEnemySpawnTime || EnemyCostManager.Current < 3) return;
@@ -142,6 +149,23 @@ namespace PrototypeTD
             if (IsGameOver) return;
             IsGameOver = true;
             UIManager.SetMessage(baseController == EnemyBase ? "Victory! Enemy base destroyed." : "Defeat... Your base has fallen.");
+        }
+
+        // Backward-compatible API used by WaveManager.
+        public void TryCompleteWavesWin()
+        {
+            if (IsGameOver) return;
+
+            foreach (var unit in FindObjectsOfType<EnemyController>())
+            {
+                if (unit != null && unit.IsEnemySide)
+                {
+                    return;
+                }
+            }
+
+            IsGameOver = true;
+            UIManager.SetMessage("Victory! All waves cleared.");
         }
     }
 }
