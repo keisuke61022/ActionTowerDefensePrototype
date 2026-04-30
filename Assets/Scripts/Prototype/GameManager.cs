@@ -47,18 +47,14 @@ namespace PrototypeTD
             _mainCamera.orthographic = true;
             _mainCamera.orthographicSize = 8f;
             _mainCamera.transform.position = new Vector3(0f, 0f, -10f);
-            _mainCamera.backgroundColor = new Color(0.08f, 0.08f, 0.1f);
+            _mainCamera.backgroundColor = new Color(0.05f, 0.07f, 0.12f);
         }
-
 
         private void CleanupLegacySceneObjects()
         {
             foreach (var canvas in FindObjectsOfType<Canvas>())
             {
-                if (canvas.name != "GameCanvas")
-                {
-                    Destroy(canvas.gameObject);
-                }
+                if (canvas.name != "GameCanvas") Destroy(canvas.gameObject);
             }
         }
 
@@ -75,8 +71,8 @@ namespace PrototypeTD
         private void BuildArena()
         {
             CreateBackground();
-            PlayerBase = CreateBase("PlayerBase", new Vector2(0f, -5.7f), Color.cyan, 50, false);
-            EnemyBase = CreateBase("EnemyBase", new Vector2(0f, 6.1f), Color.red, 45, true);
+            PlayerBase = CreateBase("PlayerBase", new Vector2(0f, -5.7f), new Color(0.12f, 0.85f, 0.9f), 50, false);
+            EnemyBase = CreateBase("EnemyBase", new Vector2(0f, 6.1f), new Color(0.95f, 0.25f, 0.25f), 45, true);
             Player = CreatePlayer(new Vector2(0f, -4.1f));
         }
 
@@ -87,7 +83,7 @@ namespace PrototypeTD
             Destroy(bg.GetComponent<Collider>());
             bg.transform.position = new Vector3(0f, 0.6f, 2f);
             bg.transform.localScale = new Vector3(8.6f, 12.8f, 1f);
-            bg.GetComponent<MeshRenderer>().material.color = new Color(0.12f, 0.18f, 0.14f);
+            PaintMesh(bg.GetComponent<MeshRenderer>(), new Color(0.12f, 0.2f, 0.16f));
         }
 
         private BaseController CreateBase(string name, Vector2 position, Color color, int hp, bool enemy)
@@ -96,9 +92,8 @@ namespace PrototypeTD
             go.name = name;
             go.transform.position = position;
             go.transform.localScale = new Vector3(2.3f, 0.9f, 1f);
-            var collider = go.GetComponent<BoxCollider>();
-            collider.isTrigger = true;
-            go.GetComponent<MeshRenderer>().material.color = color;
+            go.GetComponent<BoxCollider>().isTrigger = true;
+            PaintMesh(go.GetComponent<MeshRenderer>(), color);
 
             var baseController = go.AddComponent<BaseController>();
             baseController.Initialize(hp, enemy);
@@ -111,7 +106,7 @@ namespace PrototypeTD
             go.name = "Player";
             go.transform.position = position;
             go.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
-            go.GetComponent<MeshRenderer>().material.color = Color.yellow;
+            PaintMesh(go.GetComponent<MeshRenderer>(), new Color(1f, 0.88f, 0.2f));
 
             var col = go.AddComponent<SphereCollider>();
             col.isTrigger = true;
@@ -128,10 +123,9 @@ namespace PrototypeTD
             go.name = "Enemy";
             go.transform.position = position;
             go.transform.localScale = new Vector3(0.8f, 0.9f, 0.8f);
-            go.GetComponent<MeshRenderer>().material.color = new Color(0.8f, 0.2f, 0.9f);
+            PaintMesh(go.GetComponent<MeshRenderer>(), new Color(0.92f, 0.35f, 1f));
 
-            var col = go.AddComponent<CapsuleCollider>();
-            col.isTrigger = true;
+            go.GetComponent<CapsuleCollider>().isTrigger = true;
             var rb = go.AddComponent<Rigidbody>();
             rb.useGravity = false;
             rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
@@ -141,18 +135,19 @@ namespace PrototypeTD
             return enemy;
         }
 
-        public void RegisterEnemyKill()
+        private void PaintMesh(Renderer renderer, Color color)
         {
-            CostManager.Add(1);
+            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null) shader = Shader.Find("Unlit/Color");
+            var mat = new Material(shader);
+            mat.color = color;
+            renderer.material = mat;
         }
 
+        public void RegisterEnemyKill() => CostManager.Add(1);
         public void TryPlaceTurret()
         {
-            if (IsGameOver || !CostManager.TrySpend(3))
-            {
-                return;
-            }
-
+            if (IsGameOver || !CostManager.TrySpend(3)) return;
             var pos = Player.transform.position + Vector3.up * 1.2f;
             pos.x = Mathf.Clamp(pos.x, -3.8f, 3.8f);
             pos.y = Mathf.Clamp(pos.y, -4.8f, 4.2f);
@@ -161,29 +156,14 @@ namespace PrototypeTD
 
         public void OnBaseDestroyed(BaseController baseController)
         {
-            if (IsGameOver)
-            {
-                return;
-            }
-
+            if (IsGameOver) return;
             IsGameOver = true;
-            if (baseController == EnemyBase)
-            {
-                UIManager.SetMessage("Victory! Enemy base destroyed.");
-            }
-            else
-            {
-                UIManager.SetMessage("Defeat... Your base has fallen.");
-            }
+            UIManager.SetMessage(baseController == EnemyBase ? "Victory! Enemy base destroyed." : "Defeat... Your base has fallen.");
         }
 
         public void TryCompleteWavesWin()
         {
-            if (IsGameOver || PlayerBase.CurrentHp <= 0)
-            {
-                return;
-            }
-
+            if (IsGameOver || PlayerBase.CurrentHp <= 0) return;
             IsGameOver = true;
             UIManager.SetMessage("Victory! You survived all 5 waves.");
         }

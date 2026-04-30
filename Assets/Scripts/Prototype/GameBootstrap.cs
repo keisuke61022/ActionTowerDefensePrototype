@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
 namespace PrototypeTD
 {
@@ -25,7 +26,7 @@ namespace PrototypeTD
                 return;
             }
 
-            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             Object.DontDestroyOnLoad(eventSystemObject);
         }
     }

@@ -36,9 +36,9 @@ namespace PrototypeTD
         public void BuildUI()
         {
             Canvas canvas = CreateCanvas();
-            _statusText = CreateText(canvas.transform, "Status", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -12f), 24, TextAnchor.UpperCenter, new Vector2(1020f, 130f));
-            _helpText = CreateText(canvas.transform, "Help", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 292f), 20, TextAnchor.MiddleCenter, new Vector2(1020f, 100f));
-            _helpText.text = "Left: Move  Right: Actions  Gray buttons are placeholders";
+            _statusText = CreateText(canvas.transform, "Status", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), 20, TextAnchor.UpperCenter, new Vector2(1020f, 120f));
+            _helpText = CreateText(canvas.transform, "Help", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 338f), 18, TextAnchor.MiddleCenter, new Vector2(1020f, 72f));
+            _helpText.text = "Move: WASD/Arrows/Stick  Shoot: Space  Place Unit1: E";
             _messageText = CreateText(canvas.transform, "Message", new Vector2(0.5f, 0.67f), new Vector2(0.5f, 0.67f), Vector2.zero, 52, TextAnchor.MiddleCenter, new Vector2(980f, 200f));
 
             BuildBottomPanel(canvas.transform);
@@ -54,8 +54,8 @@ namespace PrototypeTD
             var panel = CreateUIObject("BottomPanel", parent).AddComponent<Image>();
             panel.color = new Color(0f, 0f, 0f, 0.55f);
             var rt = panel.rectTransform;
-            rt.anchorMin = new Vector2(0f, 0.06f);
-            rt.anchorMax = new Vector2(1f, 0.30f);
+            rt.anchorMin = new Vector2(0f, 0.08f);
+            rt.anchorMax = new Vector2(1f, 0.34f);
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
@@ -85,7 +85,7 @@ namespace PrototypeTD
             gaugeBg.color = new Color(0f, 0f, 0f, 0.82f);
             var gaugeBgRt = gaugeBg.rectTransform;
             gaugeBgRt.anchorMin = new Vector2(0f, 0f);
-            gaugeBgRt.anchorMax = new Vector2(1f, 0.06f);
+            gaugeBgRt.anchorMax = new Vector2(1f, 0.075f);
             gaugeBgRt.offsetMin = Vector2.zero;
             gaugeBgRt.offsetMax = Vector2.zero;
 
