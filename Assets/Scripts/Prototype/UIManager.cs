@@ -14,21 +14,27 @@ namespace PrototypeTD
 
         private JoystickArea _joystick;
         private HoldButton _shootButton;
-        private PressButton _unitButton;
+        private PressButton _turretButton;
+        private PressButton _meleeButton;
+        private PressButton _unit2Button;
+        private PressButton _unit3Button;
+        private PressButton _unit4Button;
+        private Image _turretButtonImage;
 
         public bool ShootPressed => _shootButton != null && _shootButton.Pressed;
-        public bool PlaceUnit1Pressed => _unitButton != null && _unitButton.ConsumePressed();
+        public bool PlaceUnit1Pressed => _turretButton != null && _turretButton.ConsumePressed();
 
         private void Update()
         {
-            if (_statusText != null)
-            {
-                var gm = GameManager.Instance;
-                _statusText.text = $"Base HP: {gm.PlayerBase.CurrentHp}/{gm.PlayerBase.MaxHp}  Enemy Base HP: {gm.EnemyBase.CurrentHp}/{gm.EnemyBase.MaxHp}\n" +
-                                   $"Player HP: {gm.Player.CurrentHp}  Cost: {gm.CostManager.Current}/{gm.CostManager.Max}  Wave: {gm.WaveManager.CurrentWave}/5";
-                _costLabel.text = $"Cost {gm.CostManager.Current}/{gm.CostManager.Max}";
-                UpdateCostGauge(gm.CostManager.Current);
-            }
+            if (_statusText == null) return;
+
+            var gm = GameManager.Instance;
+            _statusText.text = $"拠点HP: {gm.PlayerBase.CurrentHp}/{gm.PlayerBase.MaxHp}  敵拠点HP: {gm.EnemyBase.CurrentHp}/{gm.EnemyBase.MaxHp}\n" +
+                               $"プレイヤーHP: {gm.Player.CurrentHp}  コスト: {gm.CostManager.Current}/{gm.CostManager.Max}  Wave: {gm.WaveManager.CurrentWave}/5";
+            _costLabel.text = $"コスト {gm.CostManager.Current}/{gm.CostManager.Max}";
+            UpdateCostGauge(gm.CostManager.Current);
+            UpdateButtonStates(gm.CostManager.Current);
+            HandleUnimplementedButtonMessage();
         }
 
         public Vector2 GetStickDirection() => _joystick == null ? Vector2.zero : _joystick.Direction;
@@ -37,8 +43,8 @@ namespace PrototypeTD
         {
             Canvas canvas = CreateCanvas();
             _statusText = CreateText(canvas.transform, "Status", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), 20, TextAnchor.UpperCenter, new Vector2(1020f, 120f));
-            _helpText = CreateText(canvas.transform, "Help", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 338f), 18, TextAnchor.MiddleCenter, new Vector2(1020f, 72f));
-            _helpText.text = "Move: WASD/Arrows/Stick  Shoot: Space  Place Unit1: E";
+            _helpText = CreateText(canvas.transform, "Help", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 378f), 18, TextAnchor.MiddleCenter, new Vector2(1020f, 72f));
+            _helpText.text = "移動: WASD/矢印/スティック  射撃: Space  設置: E";
             _messageText = CreateText(canvas.transform, "Message", new Vector2(0.5f, 0.67f), new Vector2(0.5f, 0.67f), Vector2.zero, 52, TextAnchor.MiddleCenter, new Vector2(980f, 200f));
 
             BuildBottomPanel(canvas.transform);
@@ -49,37 +55,50 @@ namespace PrototypeTD
             if (_messageText != null) _messageText.text = text;
         }
 
+        private void HandleUnimplementedButtonMessage()
+        {
+            if ((_meleeButton != null && _meleeButton.ConsumePressed()) ||
+                (_unit2Button != null && _unit2Button.ConsumePressed()) ||
+                (_unit3Button != null && _unit3Button.ConsumePressed()) ||
+                (_unit4Button != null && _unit4Button.ConsumePressed()))
+            {
+                SetMessage("未実装");
+            }
+        }
+
         private void BuildBottomPanel(Transform parent)
         {
             var panel = CreateUIObject("BottomPanel", parent).AddComponent<Image>();
-            panel.color = new Color(0f, 0f, 0f, 0.55f);
+            panel.color = new Color(0f, 0f, 0f, 0.6f);
             var rt = panel.rectTransform;
-            rt.anchorMin = new Vector2(0f, 0.08f);
-            rt.anchorMax = new Vector2(1f, 0.34f);
+            rt.anchorMin = new Vector2(0f, 0.09f);
+            rt.anchorMax = new Vector2(1f, 0.36f);
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
             var stickArea = CreateUIObject("Joystick", panel.transform).AddComponent<Image>();
-            stickArea.color = new Color(1f, 1f, 1f, 0.12f);
+            stickArea.color = new Color(1f, 1f, 1f, 0.14f);
             var stickRt = stickArea.rectTransform;
-            stickRt.anchorMin = new Vector2(0.03f, 0.1f);
-            stickRt.anchorMax = new Vector2(0.38f, 0.9f);
+            stickRt.anchorMin = new Vector2(0.03f, 0.14f);
+            stickRt.anchorMax = new Vector2(0.35f, 0.86f);
             stickRt.offsetMin = Vector2.zero;
             stickRt.offsetMax = Vector2.zero;
             _joystick = stickArea.gameObject.AddComponent<JoystickArea>();
+            _joystick.CreateKnobVisual();
 
             var actions = CreateUIObject("Actions", panel.transform).GetComponent<RectTransform>();
-            actions.anchorMin = new Vector2(0.50f, 0.08f);
-            actions.anchorMax = new Vector2(0.98f, 0.92f);
+            actions.anchorMin = new Vector2(0.40f, 0.1f);
+            actions.anchorMax = new Vector2(0.98f, 0.9f);
             actions.offsetMin = Vector2.zero;
             actions.offsetMax = Vector2.zero;
 
-            _shootButton = BuildGridButton(actions, "Shoot", 0, 0, new Color(0.82f, 0.2f, 0.2f)).gameObject.AddComponent<HoldButton>();
-            BuildGridButton(actions, "Melee\nN/A", 1, 0, new Color(0.35f, 0.35f, 0.35f));
-            _unitButton = BuildGridButton(actions, "Unit1", 2, 0, new Color(0.18f, 0.58f, 0.95f)).gameObject.AddComponent<PressButton>();
-            BuildGridButton(actions, "Unit2\nN/A", 0, 1, new Color(0.35f, 0.35f, 0.35f));
-            BuildGridButton(actions, "Unit3\nN/A", 1, 1, new Color(0.35f, 0.35f, 0.35f));
-            BuildGridButton(actions, "Unit4\nN/A", 2, 1, new Color(0.35f, 0.35f, 0.35f));
+            _shootButton = BuildGridButton(actions, "射撃", 0, 0, new Color(0.88f, 0.27f, 0.22f)).gameObject.AddComponent<HoldButton>();
+            _meleeButton = BuildGridButton(actions, "近接\n未実装", 0, 1, new Color(0.25f, 0.25f, 0.25f)).gameObject.AddComponent<PressButton>();
+            _turretButtonImage = BuildGridButton(actions, "砲台\n3コスト", 1, 0, new Color(0.2f, 0.58f, 0.95f));
+            _turretButton = _turretButtonImage.gameObject.AddComponent<PressButton>();
+            _unit2Button = BuildGridButton(actions, "兵士\n4コスト", 1, 1, new Color(0.25f, 0.25f, 0.25f)).gameObject.AddComponent<PressButton>();
+            _unit3Button = BuildGridButton(actions, "範囲\n5コスト", 2, 0, new Color(0.25f, 0.25f, 0.25f)).gameObject.AddComponent<PressButton>();
+            _unit4Button = BuildGridButton(actions, "回復\n4コスト", 2, 1, new Color(0.25f, 0.25f, 0.25f)).gameObject.AddComponent<PressButton>();
 
             var gaugeBg = CreateUIObject("CostGaugeBg", parent).AddComponent<Image>();
             gaugeBg.color = new Color(0f, 0f, 0f, 0.82f);
@@ -108,6 +127,12 @@ namespace PrototypeTD
             }
         }
 
+        private void UpdateButtonStates(int currentCost)
+        {
+            if (_turretButtonImage == null) return;
+            _turretButtonImage.color = currentCost >= 3 ? new Color(0.2f, 0.58f, 0.95f) : new Color(0.12f, 0.32f, 0.52f);
+        }
+
         private Image BuildGridButton(RectTransform parent, string label, int row, int col, Color color)
         {
             var image = CreateUIObject(label, parent).AddComponent<Image>();
@@ -121,14 +146,18 @@ namespace PrototypeTD
             float yMin = 1f - (row + 1f) / rows;
             rt.anchorMin = new Vector2(xMin, yMin);
             rt.anchorMax = new Vector2(xMax, yMax);
-            rt.offsetMin = new Vector2(5f, 5f);
-            rt.offsetMax = new Vector2(-5f, -5f);
+            rt.offsetMin = new Vector2(6f, 6f);
+            rt.offsetMax = new Vector2(-6f, -6f);
 
-            var txt = CreateText(image.transform, "Label", Vector2.zero, Vector2.one, Vector2.zero, 24, TextAnchor.MiddleCenter, Vector2.zero);
+            var outline = image.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.55f);
+            outline.effectDistance = new Vector2(2f, -2f);
+
+            var txt = CreateText(image.transform, "Label", Vector2.zero, Vector2.one, Vector2.zero, 22, TextAnchor.MiddleCenter, Vector2.zero);
             txt.text = label;
             txt.resizeTextForBestFit = true;
-            txt.resizeTextMinSize = 12;
-            txt.resizeTextMaxSize = 24;
+            txt.resizeTextMinSize = 11;
+            txt.resizeTextMaxSize = 22;
             return image;
         }
 
@@ -201,9 +230,29 @@ namespace PrototypeTD
     public class JoystickArea : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerUpHandler
     {
         public Vector2 Direction { get; private set; }
+        private RectTransform _knob;
+        private float _knobRange = 48f;
+
+        public void CreateKnobVisual()
+        {
+            var knobObj = new GameObject("Knob", typeof(RectTransform), typeof(Image));
+            knobObj.transform.SetParent(transform, false);
+            _knob = knobObj.GetComponent<RectTransform>();
+            _knob.anchorMin = new Vector2(0.5f, 0.5f);
+            _knob.anchorMax = new Vector2(0.5f, 0.5f);
+            _knob.sizeDelta = new Vector2(84f, 84f);
+            _knob.anchoredPosition = Vector2.zero;
+            var image = knobObj.GetComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.65f);
+        }
+
         public void OnPointerDown(PointerEventData eventData) => UpdateDirection(eventData);
         public void OnDrag(PointerEventData eventData) => UpdateDirection(eventData);
-        public void OnPointerUp(PointerEventData eventData) => Direction = Vector2.zero;
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            Direction = Vector2.zero;
+            if (_knob != null) _knob.anchoredPosition = Vector2.zero;
+        }
 
         private void UpdateDirection(PointerEventData data)
         {
@@ -212,6 +261,10 @@ namespace PrototypeTD
             {
                 Vector2 normalized = new Vector2(local.x / (rt.rect.width * 0.5f), local.y / (rt.rect.height * 0.5f));
                 Direction = Vector2.ClampMagnitude(normalized, 1f);
+                if (_knob != null)
+                {
+                    _knob.anchoredPosition = Direction * _knobRange;
+                }
             }
         }
     }
