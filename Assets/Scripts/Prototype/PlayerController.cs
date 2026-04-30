@@ -35,7 +35,8 @@ namespace PrototypeTD
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
             transform.position += dir * (_speed * Time.deltaTime);
-            transform.position = new Vector3(Mathf.Clamp(transform.position.x, -4f, 4f), Mathf.Clamp(transform.position.y, -7f, 7f), 0f);
+            Rect playable = GameManager.Instance.PlayableRect;
+            transform.position = new Vector3(Mathf.Clamp(transform.position.x, playable.xMin, playable.xMax), Mathf.Clamp(transform.position.y, playable.yMin, playable.yMax), 0f);
         }
 
         private void HandleActions()

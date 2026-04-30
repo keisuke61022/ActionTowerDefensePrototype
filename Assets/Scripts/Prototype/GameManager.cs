@@ -16,6 +16,8 @@ namespace PrototypeTD
 
         private Camera _mainCamera;
 
+        public Rect PlayableRect => new Rect(-4f, -5.2f, 8f, 12.2f);
+
         private void Awake()
         {
             if (Instance != null)
@@ -147,7 +149,12 @@ namespace PrototypeTD
         public void RegisterEnemyKill() => CostManager.Add(1);
         public void TryPlaceTurret()
         {
-            if (IsGameOver || !CostManager.TrySpend(3)) return;
+            if (IsGameOver) return;
+            if (!CostManager.TrySpend(3))
+            {
+                UIManager.SetMessage("コスト不足");
+                return;
+            }
             var pos = Player.transform.position + Vector3.up * 1.2f;
             pos.x = Mathf.Clamp(pos.x, -3.8f, 3.8f);
             pos.y = Mathf.Clamp(pos.y, -4.8f, 4.2f);
