@@ -8,7 +8,6 @@ namespace PrototypeTD
         private float _nextTargetTime;
         private Vector3 _moveTarget;
         private float _nextShoot;
-        private readonly Vector2 _extents = new Vector2(0.5f, 0.5f);
 
         private void Start()
         {
@@ -31,7 +30,7 @@ namespace PrototypeTD
             }
 
             var pos = Vector3.MoveTowards(transform.position, _moveTarget, _moveSpeed * Time.deltaTime);
-            Rect area = GameManager.Instance.GetEnemyCommanderRect(_extents);
+            Rect area = GameManager.Instance.GetEnemyCommanderRect(GetVisualExtents());
             transform.position = new Vector3(
                 Mathf.Clamp(pos.x, area.xMin, area.xMax),
                 Mathf.Clamp(pos.y, area.yMin, area.yMax),
@@ -73,42 +72,21 @@ namespace PrototypeTD
         private void AttackAI()
         {
             if (Time.time < _nextShoot) return;
-            _nextShoot = Time.time + 0.7f;
+            _nextShoot = Time.time + 0.75f;
 
             Vector3 dir = Vector3.down;
-            Transform target = FindNearestTarget();
-            if (target != null) dir = (target.position - transform.position).normalized;
-            ProjectileController.Create(transform.position + dir * 0.7f, dir, 7f, 1, false);
+            ProjectileController.Create(transform.position + dir * 0.55f, dir, 7f, 1, false);
         }
 
-        private Transform FindNearestTarget()
+        private Vector2 GetVisualExtents()
         {
-            Transform best = null;
-            float bestDist = 6f;
+            var col = GetComponent<Collider>();
+            if (col != null) return col.bounds.extents;
 
-            if (GameManager.Instance.Player != null)
-            {
-                float pd = Vector2.Distance(transform.position, GameManager.Instance.Player.transform.position);
-                if (pd < bestDist)
-                {
-                    bestDist = pd;
-                    best = GameManager.Instance.Player.transform;
-                }
-            }
+            var renderer = GetComponent<Renderer>();
+            if (renderer != null) return renderer.bounds.extents;
 
-            EnemyController[] units = FindObjectsOfType<EnemyController>();
-            foreach (var unit in units)
-            {
-                if (unit.IsEnemySide) continue;
-                float d = Vector2.Distance(transform.position, unit.transform.position);
-                if (d < bestDist)
-                {
-                    bestDist = d;
-                    best = unit.transform;
-                }
-            }
-
-            return best;
+            return new Vector2(0.3f, 0.45f);
         }
     }
 }

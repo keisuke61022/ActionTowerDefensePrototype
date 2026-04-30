@@ -64,7 +64,7 @@ namespace PrototypeTD
             if (shootPressed && Time.time >= _nextShoot)
             {
                 _nextShoot = Time.time + _shootCooldown;
-                ProjectileController.Create(transform.position + Vector3.up * 0.7f, Vector3.up, 8f, 1, true);
+                ProjectileController.Create(transform.position + Vector3.up * 0.55f, Vector3.up, 8f, 1, true);
             }
 
             bool placePressed = Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;

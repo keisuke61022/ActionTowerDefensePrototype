@@ -14,7 +14,7 @@ namespace PrototypeTD
             var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             go.name = playerSide ? "PlayerBullet" : "EnemyBullet";
             go.transform.position = position;
-            go.transform.localScale = Vector3.one * 0.2f;
+            go.transform.localScale = Vector3.one * 0.14f;
             go.GetComponent<MeshRenderer>().material.color = playerSide ? new Color(0.45f, 0.85f, 1f) : new Color(1f, 0.3f, 0.3f);
 
             var col = go.AddComponent<SphereCollider>();

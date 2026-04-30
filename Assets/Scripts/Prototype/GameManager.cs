@@ -15,7 +15,7 @@ namespace PrototypeTD
         public CostManager EnemyCostManager { get; private set; }
         public UIManager UIManager { get; private set; }
 
-        [SerializeField] private Rect _playableRect = new Rect(-4f, -2.1f, 8f, 9.1f);
+        [SerializeField] private Rect _playableRect = new Rect(-4f, -1.2f, 8f, 7.6f);
         [SerializeField] private float _playablePadding = 0.05f;
 
         private float _nextEnemySpawnTime;
@@ -48,10 +48,10 @@ namespace PrototypeTD
 
         private void BuildArena()
         {
-            PlayerBase = CreateBase("PlayerBase", new Vector2(0f, -5.7f), new Color(0.2f, 0.5f, 1f), 100, false);
-            EnemyBase = CreateBase("EnemyBase", new Vector2(0f, 6.1f), new Color(1f, 0.3f, 0.3f), 120, true);
-            Player = CreatePlayer(new Vector2(0f, -4.1f));
-            EnemyCommander = CreateEnemyCommander(new Vector2(0f, 4.6f));
+            PlayerBase = CreateBase("PlayerBase", new Vector2(0f, -2.25f), new Color(0.2f, 0.5f, 1f), 100, false);
+            EnemyBase = CreateBase("EnemyBase", new Vector2(0f, 4.95f), new Color(1f, 0.3f, 0.3f), 120, true);
+            Player = CreateCommander("PlayerCommander", new Vector2(0f, -0.45f), new Color(0.2f, 0.8f, 1f), true).AddComponent<PlayerController>();
+            EnemyCommander = CreateCommander("EnemyCommander", new Vector2(0f, 3.25f), new Color(1f, 0.45f, 0.45f), false).AddComponent<EnemyCommanderController>();
         }
 
         private BaseController CreateBase(string name, Vector2 position, Color color, int hp, bool enemy)
@@ -67,25 +67,17 @@ namespace PrototypeTD
             return b;
         }
 
-        private PlayerController CreatePlayer(Vector2 pos)
-        {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            go.transform.position = pos;
-            go.GetComponent<MeshRenderer>().material.color = new Color(0.2f, 0.95f, 1f);
-            var col = go.AddComponent<SphereCollider>(); col.isTrigger = true;
-            var rb = go.AddComponent<Rigidbody>(); rb.useGravity = false; rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
-            return go.AddComponent<PlayerController>();
-        }
-
-        private EnemyCommanderController CreateEnemyCommander(Vector2 pos)
+        private GameObject CreateCommander(string name, Vector2 pos, Color color, bool facingUp)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            go.name = "EnemyCommander";
+            go.name = name;
             go.transform.position = pos;
+            go.transform.localScale = new Vector3(0.55f, 0.9f, 0.55f);
+            go.GetComponent<MeshRenderer>().material.color = color;
+            if (!facingUp) go.transform.rotation = Quaternion.Euler(0f, 0f, 180f);
             go.GetComponent<CapsuleCollider>().isTrigger = true;
-            go.GetComponent<MeshRenderer>().material.color = new Color(1f, 0.45f, 0.45f);
             var rb = go.AddComponent<Rigidbody>(); rb.useGravity = false; rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
-            return go.AddComponent<EnemyCommanderController>();
+            return go;
         }
 
         public EnemyController SpawnUnit(Vector2 position, bool enemySide)
@@ -93,7 +85,7 @@ namespace PrototypeTD
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.name = enemySide ? "EnemyUnit" : "AllyUnit";
             go.transform.position = position;
-            go.transform.localScale = new Vector3(0.8f, 0.9f, 0.8f);
+            go.transform.localScale = new Vector3(0.45f, 0.62f, 0.45f);
             go.GetComponent<MeshRenderer>().material.color = enemySide ? new Color(0.9f, 0.25f, 0.45f) : new Color(0.25f, 0.7f, 1f);
             go.GetComponent<CapsuleCollider>().isTrigger = true;
             var rb = go.AddComponent<Rigidbody>(); rb.useGravity = false; rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
@@ -118,30 +110,39 @@ namespace PrototypeTD
             if (Random.value > 0.65f) return;
 
             Vector3 anchor = EnemyCommander != null ? EnemyCommander.transform.position : EnemyBase.transform.position;
-            Vector2 spawn = new Vector2(Mathf.Clamp(anchor.x + Random.Range(-1.4f, 1.4f), -3.6f, 3.6f), Mathf.Clamp(anchor.y - 0.7f, 2.2f, 5.2f));
+            Vector2 spawn = new Vector2(Mathf.Clamp(anchor.x + Random.Range(-1.4f, 1.4f), -3.6f, 3.6f), Mathf.Clamp(anchor.y - 0.7f, 1.4f, 4.2f));
             if (EnemyCostManager.TrySpend(3)) SpawnUnit(spawn, true);
+
+            if (EnemyCostManager.Current >= 3 && Random.value > 0.55f)
+            {
+                var turretPos = new Vector3(Mathf.Clamp(anchor.x + Random.Range(-1.2f, 1.2f), -3.4f, 3.4f), Mathf.Clamp(anchor.y - 1.1f, 1.0f, 3.8f), 0f);
+                var rect = GetEnemyCommanderRect(new Vector2(0.3f, 0.3f));
+                turretPos.x = Mathf.Clamp(turretPos.x, rect.xMin, rect.xMax);
+                turretPos.y = Mathf.Clamp(turretPos.y, rect.yMin, rect.yMax);
+                if (EnemyCostManager.TrySpend(3)) UnitController.CreateTurret(turretPos, false);
+            }
+
             _nextEnemySpawnTime = Time.time + Random.Range(2f, 4f);
         }
-
         public void RegisterEnemyKill() => CostManager.Add(1);
 
         public void TryPlaceTurret()
         {
             if (IsGameOver) return;
             if (!CostManager.TrySpend(3)) { UIManager.SetMessage("コスト不足"); return; }
-            var pos = Player.transform.position + Vector3.up * 1.2f;
-            var placeRect = GetPlayableRectForExtents(new Vector2(0.45f, 0.45f));
+            var pos = Player.transform.position + Vector3.up * 0.95f;
+            var placeRect = GetPlayableRectForExtents(new Vector2(0.3f, 0.3f));
             pos.x = Mathf.Clamp(pos.x, placeRect.xMin, placeRect.xMax);
             pos.y = Mathf.Clamp(pos.y, placeRect.yMin, placeRect.yMax);
-            UnitController.CreateTurret(pos);
-            SpawnUnit(Player.transform.position + Vector3.up * 0.8f, false);
+            UnitController.CreateTurret(pos, true);
+            SpawnUnit(Player.transform.position + Vector3.up * 0.65f, false);
         }
 
         public Rect GetPlayableRectForExtents(Vector2 extents) => Rect.MinMaxRect(_playableRect.xMin + extents.x + _playablePadding, _playableRect.yMin + extents.y + _playablePadding, _playableRect.xMax - extents.x - _playablePadding, _playableRect.yMax - extents.y - _playablePadding);
         public Rect GetEnemyCommanderRect(Vector2 extents)
         {
             var baseRect = GetPlayableRectForExtents(extents);
-            return Rect.MinMaxRect(baseRect.xMin, 0.3f, baseRect.xMax, baseRect.yMax);
+            return Rect.MinMaxRect(baseRect.xMin, 1.0f, baseRect.xMax, baseRect.yMax);
         }
 
         public void OnBaseDestroyed(BaseController baseController)
