@@ -300,7 +300,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9b5f4e76d8f4d018b7e196e1ca27427, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  quaterniusCharacterPrefab: {fileID: 100000, guid: cb659a1d311cd491ca2588b0cd12c59b, type: 3}
+  quaterniusCharacterPrefab: {fileID: 100100000, guid: cb659a1d311cd491ca2588b0cd12c59b, type: 3}
   characterPrefabOverride: {fileID: 0}
   mainCamera: {fileID: 519420031}
   spriteRenderCamera: {fileID: 0}
