@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -22,6 +24,7 @@ namespace PrototypeTD
         {
             if (SceneManager.GetActiveScene().name != "Scene_3DCharacterTest") return;
 
+            EnsureEventSystem();
             RemoveGameplayObjects();
             EnsureMainCamera();
             EnsureDirectionalLight();
@@ -30,46 +33,44 @@ namespace PrototypeTD
             EnsureUi();
         }
 
+        // ── scene setup ──────────────────────────────────────────
+
+        private static void EnsureEventSystem()
+        {
+            if (FindObjectOfType<EventSystem>() != null) return;
+            var go = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            DontDestroyOnLoad(go);
+        }
+
         private void RemoveGameplayObjects()
         {
             var scene = SceneManager.GetActiveScene();
             foreach (var root in scene.GetRootGameObjects())
             {
-                if (root == gameObject || root.name == "Main Camera" || root.name == "Directional Light" || root.name == "TestFloor")
-                {
-                    continue;
-                }
+                if (root == gameObject ||
+                    root.name == "Main Camera" ||
+                    root.name == "Directional Light" ||
+                    root.name == "TestFloor") continue;
 
-                if (root.GetComponent<Character3DTestController>() != null || root.GetComponentInChildren<Character3DTestController>(true) != null)
-                {
-                    continue;
-                }
+                if (root.GetComponent<Character3DTestController>() != null ||
+                    root.GetComponentInChildren<Character3DTestController>(true) != null) continue;
 
                 if (ShouldRemoveAsGameplay(root.name) || root.GetComponentInChildren<Canvas>(true) != null)
-                {
                     Destroy(root);
-                }
             }
 
-            // Also remove gameplay singletons that may live in DontDestroyOnLoad.
             foreach (var obj in Resources.FindObjectsOfTypeAll<GameObject>())
             {
                 if (obj == null || obj.scene.IsValid()) continue;
                 if (obj.transform.parent != null) continue;
-                if (ShouldRemoveAsGameplay(obj.name))
-                {
-                    Destroy(obj);
-                }
+                if (ShouldRemoveAsGameplay(obj.name)) Destroy(obj);
             }
         }
 
         private static bool ShouldRemoveAsGameplay(string objectName)
         {
-            for (var i = 0; i < GameplayObjectNameKeywords.Length; i++)
-            {
-                if (objectName.Contains(GameplayObjectNameKeywords[i])) return true;
-            }
-
+            foreach (var kw in GameplayObjectNameKeywords)
+                if (objectName.Contains(kw)) return true;
             return false;
         }
 
@@ -78,8 +79,7 @@ namespace PrototypeTD
             if (mainCamera == null) mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                var go = new GameObject("Main Camera");
-                go.tag = "MainCamera";
+                var go = new GameObject("Main Camera") { tag = "MainCamera" };
                 mainCamera = go.AddComponent<Camera>();
                 go.AddComponent<AudioListener>();
             }
@@ -136,40 +136,103 @@ namespace PrototypeTD
             }
 
             if (_character != null)
-            {
                 _cameraSwitcher.SetLookTarget(_character.transform);
-            }
         }
+
+        // ── UI ───────────────────────────────────────────────────
 
         private void EnsureUi()
         {
             if (GameObject.Find("CharacterTestCanvas") != null) return;
-            var canvasGo = new GameObject("CharacterTestCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+
+            var canvasGo = new GameObject("CharacterTestCanvas",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
 
-            CreateButton(canvasGo.transform, "Cam Side", new Vector2(90, 40), () => _cameraSwitcher.SetAngleIndex(0));
-            CreateButton(canvasGo.transform, "Cam Top", new Vector2(90, 80), () => _cameraSwitcher.SetAngleIndex(1));
-            CreateButton(canvasGo.transform, "Cam Front", new Vector2(90, 120), () => _cameraSwitcher.SetAngleIndex(2));
-            CreateButton(canvasGo.transform, "Team Red/Blue", new Vector2(110, 170), () => _character?.SwitchTeam());
+            // ── Left: Camera ──────────────────────
+            CreateLabel(canvasGo.transform, "[ Camera ]",
+                new Vector2(0, 1), new Vector2(10, -12));
+            CreateButton(canvasGo.transform, "Cam Front",
+                new Vector2(0, 1), new Vector2(10, -40),
+                () => _cameraSwitcher?.SetAngleIndex(2));
+            CreateButton(canvasGo.transform, "Cam Side",
+                new Vector2(0, 1), new Vector2(10, -84),
+                () => _cameraSwitcher?.SetAngleIndex(0));
+            CreateButton(canvasGo.transform, "Cam Top",
+                new Vector2(0, 1), new Vector2(10, -128),
+                () => _cameraSwitcher?.SetAngleIndex(1));
+
+            // ── Left: Team ────────────────────────
+            CreateLabel(canvasGo.transform, "[ Team ]",
+                new Vector2(0, 1), new Vector2(10, -186));
+            CreateButton(canvasGo.transform, "Team Red",
+                new Vector2(0, 1), new Vector2(10, -214),
+                () => _character?.SetTeam(Character3DTestController.TeamColor.Red),
+                new Color(0.75f, 0.15f, 0.15f, 0.9f));
+            CreateButton(canvasGo.transform, "Team Blue",
+                new Vector2(0, 1), new Vector2(10, -258),
+                () => _character?.SetTeam(Character3DTestController.TeamColor.Blue),
+                new Color(0.15f, 0.3f, 0.75f, 0.9f));
+
+            // ── Right: Motion ─────────────────────
+            CreateLabel(canvasGo.transform, "[ Motion ]",
+                new Vector2(1, 1), new Vector2(-138, -12));
+            CreateButton(canvasGo.transform, "Idle",
+                new Vector2(1, 1), new Vector2(-138, -40),
+                () => _character?.SetMotion(Character3DTestController.MotionState.Idle));
+            CreateButton(canvasGo.transform, "Walk",
+                new Vector2(1, 1), new Vector2(-138, -84),
+                () => _character?.SetMotion(Character3DTestController.MotionState.Walk));
+            CreateButton(canvasGo.transform, "Attack",
+                new Vector2(1, 1), new Vector2(-138, -128),
+                () => _character?.SetMotion(Character3DTestController.MotionState.Attack));
         }
 
-        private static void CreateButton(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction action)
+        private static void CreateLabel(Transform parent, string text, Vector2 anchor, Vector2 pos)
         {
+            var go = new GameObject(text, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = anchor; rt.anchorMax = anchor; rt.pivot = anchor;
+            rt.anchoredPosition = pos; rt.sizeDelta = new Vector2(128, 22);
+            var t = go.GetComponent<Text>();
+            t.text = text;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.color = new Color(1f, 1f, 0.6f, 1f);
+            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.fontSize = 14;
+            t.fontStyle = FontStyle.Bold;
+        }
+
+        private static void CreateButton(Transform parent, string label, Vector2 anchor, Vector2 pos,
+            UnityEngine.Events.UnityAction action, Color? bgColor = null)
+        {
+            var bg = bgColor ?? new Color(0.12f, 0.12f, 0.12f, 0.88f);
+
             var go = new GameObject(label, typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
             var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1);
-            rt.anchoredPosition = pos; rt.sizeDelta = new Vector2(150, 32);
-            go.GetComponent<Image>().color = new Color(0.15f, 0.15f, 0.15f, 0.8f);
+            rt.anchorMin = anchor; rt.anchorMax = anchor; rt.pivot = anchor;
+            rt.anchoredPosition = pos; rt.sizeDelta = new Vector2(128, 38);
+            go.GetComponent<Image>().color = bg;
             go.GetComponent<Button>().onClick.AddListener(action);
 
             var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
             textGo.transform.SetParent(go.transform, false);
-            var text = textGo.GetComponent<Text>();
-            text.text = label; text.alignment = TextAnchor.MiddleCenter; text.color = Color.white; text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var textRt = textGo.GetComponent<RectTransform>();
-            textRt.anchorMin = Vector2.zero; textRt.anchorMax = Vector2.one; textRt.offsetMin = Vector2.zero; textRt.offsetMax = Vector2.zero;
+            textRt.anchorMin = Vector2.zero; textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = Vector2.zero; textRt.offsetMax = Vector2.zero;
+            var t = textGo.GetComponent<Text>();
+            t.text = label;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.color = Color.white;
+            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.fontSize = 16;
+            t.fontStyle = FontStyle.Bold;
         }
     }
 }
