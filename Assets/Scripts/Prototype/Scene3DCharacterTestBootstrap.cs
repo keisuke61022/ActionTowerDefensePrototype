@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace PrototypeTD
 {
@@ -15,7 +12,7 @@ namespace PrototypeTD
         private static readonly string[] GameplayObjectNameKeywords =
         {
             "PlayerBase", "EnemyBase", "PlayerCommander", "EnemyCommander", "GameCanvas", "EnemyUnit", "EnemyBullet",
-            "Turret", "Cost", "Shoot", "Wave", "Spawner", "GameManager", "Commander", "UIManager"
+            "Turret", "Cost", "Shoot", "Wave", "Spawner", "GameManager", "Commander", "UIManager", "DontDestroyOnLoad"
         };
 
         private CameraAngleSwitcher _cameraSwitcher;
@@ -118,20 +115,17 @@ namespace PrototypeTD
             }
             else
             {
-#if UNITY_EDITOR
                 if (quaterniusCharacterPrefab == null)
                 {
-                    quaterniusCharacterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ThirdParty/Quaternius/UltimateModularMen/Humanoid Rig/Individual Characters/FBX/Adventurer.fbx");
+                    Debug.LogWarning("Scene3DCharacterTestBootstrap: Quaternius Character Prefab is not assigned. Character spawn is skipped.");
+                    return;
                 }
-#endif
-                if (quaterniusCharacterPrefab != null)
-                {
-                    var go = Instantiate(quaterniusCharacterPrefab, Vector3.zero, Quaternion.identity);
-                    go.name = "UMM_Adventurer";
-                    go.transform.localScale = Vector3.one * 1.1f;
-                    _character = go.GetComponent<Character3DTestController>();
-                    if (_character == null) _character = go.AddComponent<Character3DTestController>();
-                }
+
+                var go = Instantiate(quaterniusCharacterPrefab, Vector3.zero, Quaternion.identity);
+                go.name = "UMM_Adventurer";
+                go.transform.localScale = Vector3.one * 1.1f;
+                _character = go.GetComponent<Character3DTestController>();
+                if (_character == null) _character = go.AddComponent<Character3DTestController>();
             }
 
             if (_character != null)
