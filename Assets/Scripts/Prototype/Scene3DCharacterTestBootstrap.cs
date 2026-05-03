@@ -12,6 +12,12 @@ namespace PrototypeTD
         [SerializeField] private GameObject quaterniusCharacterPrefab;
         [SerializeField] private Camera mainCamera;
 
+        private static readonly string[] GameplayObjectNameKeywords =
+        {
+            "PlayerBase", "EnemyBase", "PlayerCommander", "EnemyCommander", "GameCanvas", "EnemyUnit", "EnemyBullet",
+            "Turret", "Cost", "Shoot", "Wave", "Spawner", "GameManager", "Commander", "UIManager"
+        };
+
         private CameraAngleSwitcher _cameraSwitcher;
         private Character3DTestController _character;
 
@@ -29,18 +35,45 @@ namespace PrototypeTD
 
         private void RemoveGameplayObjects()
         {
-            var deleteNames = new[] { "GameManager", "EnemySpawner", "EnemyCommander", "GameCanvas", "EnemyTurret", "EnemyUnit", "PlayerBase", "UMM_TestCharacter_Fallback" };
-            foreach (var root in SceneManager.GetActiveScene().GetRootGameObjects())
+            var scene = SceneManager.GetActiveScene();
+            foreach (var root in scene.GetRootGameObjects())
             {
-                foreach (var n in deleteNames)
+                if (root == gameObject || root.name == "Main Camera" || root.name == "Directional Light" || root.name == "TestFloor")
                 {
-                    if (root.name.Contains(n))
-                    {
-                        Destroy(root);
-                        break;
-                    }
+                    continue;
+                }
+
+                if (root.GetComponent<Character3DTestController>() != null || root.GetComponentInChildren<Character3DTestController>(true) != null)
+                {
+                    continue;
+                }
+
+                if (ShouldRemoveAsGameplay(root.name) || root.GetComponentInChildren<Canvas>(true) != null)
+                {
+                    Destroy(root);
                 }
             }
+
+            // Also remove gameplay singletons that may live in DontDestroyOnLoad.
+            foreach (var obj in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                if (obj == null || obj.scene.IsValid()) continue;
+                if (obj.transform.parent != null) continue;
+                if (ShouldRemoveAsGameplay(obj.name))
+                {
+                    Destroy(obj);
+                }
+            }
+        }
+
+        private static bool ShouldRemoveAsGameplay(string objectName)
+        {
+            for (var i = 0; i < GameplayObjectNameKeywords.Length; i++)
+            {
+                if (objectName.Contains(GameplayObjectNameKeywords[i])) return true;
+            }
+
+            return false;
         }
 
         private void EnsureMainCamera()
