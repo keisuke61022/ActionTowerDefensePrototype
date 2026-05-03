@@ -8,9 +8,9 @@ namespace PrototypeTD
         [SerializeField] private Transform lookTarget;
         [SerializeField] private Vector3[] positions =
         {
-            new(8f, 1.5f, 0f),   // side
-            new(6f, 6f, -6f),    // top-down
-            new(0f, 2f, -8f)     // front-ish
+            new(8f, 1.5f, 0f),
+            new(6f, 6f, -6f),
+            new(0f, 2f, -8f)
         };
 
         private int _current;
@@ -18,25 +18,27 @@ namespace PrototypeTD
         private void Start()
         {
             if (targetCamera == null) targetCamera = GetComponent<Camera>();
-            if (lookTarget == null)
-            {
-                var c = FindObjectOfType<Character3DTestController>();
-                if (c != null) lookTarget = c.transform;
-            }
             ApplyCurrent();
         }
 
-        private void Update()
+        public void SetLookTarget(Transform target)
         {
-            if (Input.GetKeyDown(KeyCode.C))
-            {
-                _current = (_current + 1) % positions.Length;
-                ApplyCurrent();
-            }
+            lookTarget = target;
+            ApplyCurrent();
+        }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)) { _current = 0; ApplyCurrent(); }
-            if (Input.GetKeyDown(KeyCode.Alpha2)) { _current = 1; ApplyCurrent(); }
-            if (Input.GetKeyDown(KeyCode.Alpha3)) { _current = 2; ApplyCurrent(); }
+        public void NextAngle()
+        {
+            if (positions.Length == 0) return;
+            _current = (_current + 1) % positions.Length;
+            ApplyCurrent();
+        }
+
+        public void SetAngleIndex(int index)
+        {
+            if (positions.Length == 0) return;
+            _current = Mathf.Clamp(index, 0, positions.Length - 1);
+            ApplyCurrent();
         }
 
         private void ApplyCurrent()
