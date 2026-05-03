@@ -115,6 +115,13 @@ namespace PrototypeTD
             }
             else
             {
+#if UNITY_EDITOR
+                if (quaterniusCharacterPrefab == null)
+                {
+                    quaterniusCharacterPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+                        "Assets/ThirdParty/Quaternius/UltimateModularMen/Humanoid Rig/Individual Characters/FBX/Adventurer.fbx");
+                }
+#endif
                 if (quaterniusCharacterPrefab == null)
                 {
                     Debug.LogWarning("Scene3DCharacterTestBootstrap: Quaternius Character Prefab is not assigned. Character spawn is skipped.");

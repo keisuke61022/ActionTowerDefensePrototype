@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
 
 namespace PrototypeTD
 {
@@ -9,6 +10,8 @@ namespace PrototypeTD
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
+            if (SceneManager.GetActiveScene().name == "Scene_3DCharacterTest") return;
+
             if (Object.FindObjectOfType<GameManager>() != null)
             {
                 return;
